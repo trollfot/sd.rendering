@@ -1,0 +1,15 @@
+<configure xmlns="http://namespaces.zope.org/zope"
+	   xmlns:browser="http://namespaces.zope.org/browser"
+	   i18n_domain="sd">
+  
+  <utility
+      name="sd.rendering.chapter_layout"
+      component=".vocabularies.ChapterLayoutVocabularyFactory"
+      />
+
+  <utility
+      name="sd.rendering.paragraph_layout"
+      component=".vocabularies.ParagraphLayoutVocabularyFactory"
+      />
+
+</configure>
