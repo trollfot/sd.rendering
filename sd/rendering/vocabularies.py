@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 
+from zope.component import getAdapters
+from zope.i18nmessageid import MessageFactory
 from zope.app.schema.vocabulary import IVocabularyFactory
 from zope.interface.declarations import directlyProvides, implements
 from zope.schema.vocabulary import SimpleVocabulary, SimpleTerm
 from zope.schema.interfaces import ITokenizedTerm, ITitledTokenizedTerm
-from zope.component import getAdapters
 
 from sd.contents.interfaces import IUndirectLayoutProvider
 from interfaces import IChapterRenderer, IParagraphRenderer
 from zope.publisher.browser import TestRequest
-from sd import _
+
+_ = MessageFactory("sd")
 
 
 class LayoutTerm(object):
