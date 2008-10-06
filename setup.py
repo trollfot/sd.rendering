@@ -26,7 +26,7 @@ setup(name = name,
           'setuptools',
           'sd.common >= 0.6',
       ],
-      classifiers = [imaging
+      classifiers = [
         'Development Status :: 4 - Beta',
         'Environment :: Web Environment',
         'Framework :: Plone',
