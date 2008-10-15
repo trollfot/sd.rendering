@@ -20,26 +20,33 @@ class IChapterRenderer(IBaseStructuredRenderer):
 class IParagraphRenderer(IBaseStructuredRenderer):
     """A renderer for a paragraph.
     """
-    
-class IBatchedContentProvider(Interface):
+
+class IBaseStructuredContentProvider(Interface):
+    """A renderer that provides content.
+    """
+    def contents(full_objects=False):
+        """Return a list of the contained objects.
+        """
+
+class IBatchedContentProvider(IBaseStructuredContentProvider):
     """This is an implementation of a batch mixin for a renderer
     """
     batch_size = Attribute("The size of the batch.")
     batch_name = Attribute("The unique name representing the batch in a page.")
     page = Attribute("The number of the page visited.")
 
-    def contents(contentFilter={}, full_objects=False):
-        """Returns the processed batch content.
-        It calls the method 'query_contents' and slices it according to
-        the current batch position. If 'full_objects' is True, it returns
-        a list of objects otherwise brains.
-        """
-
-    def query_contents(contentFilter={}):
+    def query_contents(**contentFilter):
         """Queries the shown content. It doesn't limit nor trim the list.
         It returns a list of Brains. If iface is provided, it should
         restrict the returned list to the objects implementing the interface
         or to brains of objects implementing the interface.
+        """
+        
+    def contents(full_objects=False, **contentFilter):
+        """Returns the processed batch content.
+        It calls the method 'query_contents' and slices it according to
+        the current batch position. If 'full_objects' is True, it returns
+        a list of objects otherwise brains.
         """
 
 # Content providers
@@ -65,12 +72,9 @@ class IStructuredDocumentParagraphing(IStructuredContentProvider):
 
 
 # Specific views
-class IStructuredDocumentView(Interface):
+class IStructuredDocumentView(IBaseStructuredContentProvider):
     """View associated to a structured document.
     """
-    def chapters(self):
-        """This method must return a list of IStructuredChapter objects.
-        """
         
 class IStructuredChapterView(Interface):
     """View associated to a structured chapter.

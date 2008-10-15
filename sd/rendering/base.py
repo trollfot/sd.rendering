@@ -26,7 +26,7 @@ class BaseStructuredContentProvider(Explicit):
     def __init__(self, context, request, view):
         self.context = context
         self.request = request
-        self.__parent__ = view
+        self.view = self.__parent__ = view
 
     def update(self):
         pass
@@ -153,8 +153,8 @@ class FolderishRenderer(BaseStructuredRenderer):
         return len(self.query_contents()) > current_size
 
     @memoize
-    def contents(self, contentFilter={}, full_objects=False):
-        brains = self.query_contents(contentFilter)
+    def contents(self, full_objects=False, **contentFilter):
+        brains = self.query_contents(**contentFilter)
         if self.batch_size:
             start = self.batch_size * self.page
             end = start + self.batch_size
@@ -163,12 +163,12 @@ class FolderishRenderer(BaseStructuredRenderer):
         return (full_objects and [brain.getObject() for brain in brains]
                 or brains)
 
-    def query_contents(self, contentFilter={}):
+    def query_contents(self, **contentFilter):
         iface = getattr(self, '_filtering', None)
         if iface:
             contentFilter['object_provides'] = iface
         handler = IContentQueryHandler(self.context, None)
-        return handler and handler.query_contents(contentFilter) or []
+        return handler and handler.query_contents(**contentFilter) or []
 
     def get_page(self):
         return (getattr(self, '_page', None) or
