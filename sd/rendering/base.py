@@ -3,11 +3,10 @@
 from Acquisition import Explicit
 from zope.interface import implements
 from zope.publisher.browser import BrowserPage
-from zope.cachedescriptors.property import Lazy, CachedProperty
+from zope.cachedescriptors.property import CachedProperty
 
 from plone.memoize.instance import memoize
 from Products.Five.browser import BrowserView
-from Products.ATContentTypes.interface.topic import IATTopic
 
 from sd.common.adapters.storage.interfaces import IStorage
 from sd.common.adapters.interfaces import IContentQueryHandler
@@ -67,7 +66,7 @@ class BaseStructuredRenderer(Explicit, BrowserPage):
     def absolute_url(self):
         return self.context.absolute_url()
 
-    @Lazy
+    @CachedProperty
     def configuration(self):
         return IStorage(self.context).retrieve(self.__name__)
 
@@ -95,15 +94,15 @@ class ChapterStructuredRenderer(BaseStructuredRenderer):
     implements(IStructuredChapterView, IChapterRenderer)
     _namespace = "sd.rendering.chapter_layout"
 
-    @property
+    @CachedProperty
     def _edit_url(self):
-       return self.absolute_url() + "/dynamic_chapter"
+       return self.absolute_url() + "/@@dynamic_chapter"
 
-    @Lazy
+    @CachedProperty
     def show_title(self):
         return IDynamicStructuredChapter(self.context).show_title
 
-    @Lazy
+    @CachedProperty
     def show_description(self):
         return IDynamicStructuredChapter(self.context).show_description
 
@@ -115,15 +114,15 @@ class ParagraphStructuredRenderer(BaseStructuredRenderer):
     implements(IParagraphRenderer)
     _namespace = "sd.rendering.paragraph_layout"
     
-    @property
+    @CachedProperty
     def _edit_url(self):
-       return self.absolute_url() + "/dynamic_paragraph"
+       return self.absolute_url() + "/@@dynamic_paragraph"
     
-    @Lazy
+    @CachedProperty
     def show_title(self):
         return IDynamicStructuredParagraph(self.context).show_title
 
-    @Lazy
+    @CachedProperty
     def show_description(self):
         return IDynamicStructuredParagraph(self.context).show_description
 
@@ -134,18 +133,18 @@ class FolderishRenderer(BaseStructuredRenderer):
     """
     implements(IBatchedContentProvider)
 
-    @Lazy
+    @CachedProperty
     def batch_size(self):
         provider = IBatchProvider(self.context, None)
         if provider is None:
             return 15
         return provider.batch_size
 
-    @property
+    @CachedProperty
     def batch_name(self):
         return "batch_%s" % self.UID()
 
-    @Lazy
+    @CachedProperty
     def has_next_page(self):
         if not self.batch_size:
             return False
