@@ -10,6 +10,7 @@ from Products.Five.browser import BrowserView
 from Products.ATContentTypes.interface.topic import IATTopic
 
 from sd.common.adapters.storage.interfaces import IStorage
+from sd.common.adapters.interfaces import IContentQueryHandler
 from sd.contents.interfaces import IBatchProvider
 from sd.contents.interfaces import IUndirectLayoutProvider
 from sd.contents.interfaces import IDynamicStructuredChapter
@@ -152,31 +153,22 @@ class FolderishRenderer(BaseStructuredRenderer):
         return len(self.query_contents()) > current_size
 
     @memoize
-    def contents(self, full_objects=False):
-        """This is the heart of the sd batching system.
-        It will query the whole content using the 'query_contents' method,
-        getting only the *brains*. Then, it will slice the results into the
-        wanted batch. 
-        """
-        if not self.batch_size:
-            return self.query_contents(full_objects=full_objects)
-        start = self.batch_size * self.page
-        end = start + self.batch_size
-        brains = self.query_contents(full_objects=False)[start:end]
+    def contents(self, contentFilter={}, full_objects=False):
+        brains = self.query_contents(contentFilter)
+        if self.batch_size:
+            start = self.batch_size * self.page
+            end = start + self.batch_size
+            brains = brains[start:end]
+
         return (full_objects and [brain.getObject() for brain in brains]
                 or brains)
 
-    @memoize
-    def query_contents(self, iface=None, full_objects=False):
-        if iface == None:
-            contentFilter = getattr(self, '_filtering', None)
-            iface = contentFilter and {'object_provides': contentFilter} or {}
-
-        if IATTopic.providedBy(self.context):
-             return self.context.queryCatalog(full_objects = full_objects,
-                                              **iface)
-        return self.context.getFolderContents(contentFilter=iface,
-                                              full_objects = full_objects)
+    def query_contents(self, contentFilter={}):
+        iface = getattr(self, '_filtering', None)
+        if iface:
+            contentFilter['object_provides'] = iface
+        handler = IContentQueryHandler(self.context, None)
+        return handler and handler.query_contents(contentFilter) or []
 
     def get_page(self):
         return (getattr(self, '_page', None) or

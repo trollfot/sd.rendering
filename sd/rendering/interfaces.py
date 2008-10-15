@@ -28,16 +28,16 @@ class IBatchedContentProvider(Interface):
     batch_name = Attribute("The unique name representing the batch in a page.")
     page = Attribute("The number of the page visited.")
 
-    def query_contents(full_objects=False):
+    def contents(contentFilter={}, full_objects=False):
         """Returns the processed batch content.
-        It calls the method 'contents' and slices it according to the current
-        batch position.
+        It calls the method 'query_contents' and slices it according to
+        the current batch position. If 'full_objects' is True, it returns
+        a list of objects otherwise brains.
         """
 
-    def contents(iface=None, full_objects=False):
+    def query_contents(contentFilter={}):
         """Queries the shown content. It doesn't limit nor trim the list.
-        If 'full_objects' is True, it returns a list of objects.
-        Else, it returns a list of Brains. If iface is provided, it should
+        It returns a list of Brains. If iface is provided, it should
         restrict the returned list to the objects implementing the interface
         or to brains of objects implementing the interface.
         """
