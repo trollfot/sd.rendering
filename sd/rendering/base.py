@@ -169,7 +169,6 @@ class FolderishRenderer(BaseStructuredRenderer):
 
     @memoize
     def query_contents(self, **contentFilter):
-        print "je query 1 fois"
         iface = getattr(self, '_filtering', None)
         if iface:
             contentFilter['object_provides'] = iface
