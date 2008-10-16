@@ -51,18 +51,23 @@ class BaseStructuredRenderer(Explicit, BrowserPage):
     def __getitem__(self, name):
         return self.index.macros[name]
 
+    @memoize
     def getId(self):
         return self.context.getId()
 
+    @memoize
     def UID(self):
         return self.context.UID()
 
+    @memoize
     def Title(self):
         return self.context.Title()        
-    
+
+    @memoize
     def Description(self):
         return self.context.Description()
 
+    @memoize
     def absolute_url(self):
         return self.context.absolute_url()
 
@@ -162,7 +167,9 @@ class FolderishRenderer(BaseStructuredRenderer):
         return (full_objects and [brain.getObject() for brain in brains]
                 or brains)
 
+    @memoize
     def query_contents(self, **contentFilter):
+        print "je query 1 fois"
         iface = getattr(self, '_filtering', None)
         if iface:
             contentFilter['object_provides'] = iface
