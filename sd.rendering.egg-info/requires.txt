@@ -1,2 +1,0 @@
-setuptools
-sd.common >= 0.6
