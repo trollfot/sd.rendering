@@ -1,0 +1,18 @@
+<configure xmlns="http://namespaces.zope.org/zope"
+	   xmlns:browser="http://namespaces.zope.org/browser"
+	   i18n_domain="sd">
+  
+  <adapter
+      factory="sd.common.adapters.query.FolderishContentQuery"
+      />
+
+  <adapter
+      factory="sd.common.adapters.query.TopicContentQuery"
+      />
+
+  <utility
+      name="sd.rendering.layout"
+      component=".vocabularies.LayoutVocabularyFactory"
+      />
+
+</configure>

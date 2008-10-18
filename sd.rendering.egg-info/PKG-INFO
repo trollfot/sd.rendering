@@ -1,0 +1,22 @@
+Metadata-Version: 1.0
+Name: sd.rendering
+Version: 0.7.1
+Summary: Structured Document Extended Rendering Module
+Home-page: http://tracker.trollfot.org/wiki/StructuredDocument
+Author: Souheil Chelfouh
+Author-email: souheil@chelfouh.com
+License: GPL
+Download-URL: http://pypi.python.org/pypi/sd.rendering
+Description: 
+        
+Keywords: plone browserview zope structureddocument
+Platform: Any
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Web Environment
+Classifier: Framework :: Plone
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Other Audience
+Classifier: License :: OSI Approved :: GNU General Public License (GPL)
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
