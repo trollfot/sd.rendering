@@ -1,13 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from Acquisition import Explicit
 from zope.interface import implements
-from zope.publisher.browser import BrowserPage
 from zope.cachedescriptors.property import CachedProperty
-
-from plone.memoize.instance import memoize
 from Products.Five.browser import BrowserView
-
+from plone.memoize.instance import memoize
 from sd.common.adapters.storage.interfaces import IStorage
 from sd.common.adapters.interfaces import IContentQueryHandler
 from sd.contents.interfaces import IBatchProvider, IUndirectLayoutProvider
@@ -39,7 +35,7 @@ class StructuredRenderer(BrowserView):
 
     @memoize
     def Title(self):
-        return self.context.Title()        
+        return self.context.Title() or self.getId()     
 
     @memoize
     def Description(self):
