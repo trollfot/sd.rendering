@@ -35,7 +35,7 @@ class StructuredRenderer(BrowserView):
 
     @memoize
     def Title(self):
-        return self.context.Title() or self.getId()     
+        return self.context.Title()
 
     @memoize
     def Description(self):
