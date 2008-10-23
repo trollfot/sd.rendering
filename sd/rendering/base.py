@@ -1,29 +1,96 @@
 # -*- coding: utf-8 -*-
 
-from zope.interface import implements
+import martian
+
+from zope.interface import Interface, implements
+from zope import component
 from zope.cachedescriptors.property import CachedProperty
-from Products.Five.browser import BrowserView
+from zope.publisher.browser import BrowserPage
 from plone.memoize.instance import memoize
 from sd.common.adapters.storage.interfaces import IStorage
 from sd.common.adapters.interfaces import IContentQueryHandler
 from sd.contents.interfaces import IBatchProvider, IUndirectLayoutProvider
 from sd.contents.interfaces import IDynamicStructuredItem
 from interfaces import IStructuredRenderer, IBatchedContentProvider
+import Acquisition
 
 
-class StructuredRenderer(BrowserView):
+class GrokAwareRenderer(BrowserPage, Acquisition.Explicit):
+
+    getPhysicalPath = Acquisition.Acquired
+
+    def __init__(self, context, request):
+        super(GrokAwareRenderer, self).__init__(context, request)
+        self.static = component.queryAdapter(
+            self.request,
+            Interface,
+            name=self.module_info.package_dotted_name
+            )
+
+        if not (self.static is None):
+            self.static = self.static.__of__(self)
+    
+    @property
+    def response(self):
+        return self.request.response
+
+    def __call__(self):
+        mapply(self.update, (), self.request)
+        if self.request.response.getStatus() in (302, 303):
+            # A redirect was triggered somewhere in update().  Don't
+            # continue rendering the template or doing anything else.
+            return
+
+        template = getattr(self, 'template', None)
+        if template is not None:
+            return self.template.render(self)
+        return mapply(self.render, (), self.request)
+
+    def default_namespace(self):
+        namespace = {}
+        namespace['context'] = self.context
+        namespace['request'] = self.request
+        namespace['static'] = self.static
+        namespace['view'] = self
+        return namespace
+
+    def namespace(self):
+        return {}
+
+    def __getitem__(self, key):
+        # This is BBB code for Zope page templates only:
+        if not isinstance(self.template, PageTemplate):
+            raise AttributeError("View has no item %s" % key)
+
+        value = self.template._template.macros[key]
+        # When this deprecation is done with, this whole __getitem__ can
+        # be removed.
+        warnings.warn("Calling macros directly on the view is deprecated. "
+                      "Please use context/@@viewname/macros/macroname\n"
+                      "View %r, macro %s" % (self, key),
+                      DeprecationWarning, 1)
+        return value
+
+    def redirect(self, url):
+        return self.request.response.redirect(url)
+
+    def update(self):
+        pass
+
+    def _render_template(self):
+        macro = getattr(self, "__renderer_macro__", None)
+        if macro is not None:
+            return self.template.renderMacro(self, macro)
+        return self.template.render(self)
+    
+    def render(self):
+        return self._render_template()
+
+
+class StructuredRenderer(GrokAwareRenderer):
     """The base implementation of the structured renderer
     """
     implements(IStructuredRenderer, IUndirectLayoutProvider)
-
-    _filtering = None
-
-    def __init__(self, context, request):
-        BrowserView.__init__(self, context, request)
-        self.__parent__ = context
-
-    def __getitem__(self, name):
-        return self.index.macros[name]
 
     @memoize
     def getId(self):
@@ -69,20 +136,15 @@ class StructuredRenderer(BrowserView):
     def widget(self, *args, **kw):
         return self.context.widget(*args, **kw)
 
-    def __call__(self, *args, **kw):
-        return self.index(*args, **kw)
-    
-    def render(self, *args, **kw):
-        if self.__renderer_macro__ is not None:
-            return self.index.renderMacro(self.__renderer_macro__, **kw)
-        return self.index(*args, **kw)
-    
 
 class FolderishRenderer(StructuredRenderer):
     """Extends a StructuredRenderer in order to provide convenient methods
     for both content retrieving and batching.
     """
     implements(IBatchedContentProvider)
+
+    __folder_limit__ = None
+    __folder_restrict__ = None
 
     @CachedProperty
     def batch_size(self):
@@ -115,11 +177,16 @@ class FolderishRenderer(StructuredRenderer):
 
     @memoize
     def query_contents(self, **contentFilter):
-        iface = getattr(self, '_filtering', None)
-        if iface:
-            contentFilter['object_provides'] = iface
-        handler = IContentQueryHandler(self.context, None)
-        return handler and handler.query_contents(**contentFilter) or []
+        if self.__folder_restrict__:
+            contentFilter['object_provides'] = [
+                ".".join((iface.__module__, iface.__name__))
+                for iface in self.__folder_restrict__
+                ]
+
+        handler = IContentQueryHandler(self.context, None)      
+        return handler and handler.query_contents(
+            limit = self.__folder_limit__, **contentFilter
+            ) or []
 
     def get_page(self):
         return (getattr(self, '_page', None) or

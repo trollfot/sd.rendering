@@ -20,6 +20,10 @@ class IStructuredRenderer(Interface):
         done by rendering a template.
         """
 
+class IStructuredDefaultRenderer(IStructuredRenderer):
+    """A structured renderer used as default, when no layout is selected.
+    """
+
 class IBatchedContentProvider(IStructuredRenderer, IStructuredView):
     """This is an implementation of a batch mixin for a renderer
     """
