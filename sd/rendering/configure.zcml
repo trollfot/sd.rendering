@@ -11,11 +11,6 @@
       factory="sd.common.adapters.query.TopicContentQuery"
       />
 
-  <utility
-      name="sd.rendering.layout"
-      component=".vocabularies.LayoutVocabularyFactory"
-      />
-
   <grok:grok package="." />
 
 </configure>
