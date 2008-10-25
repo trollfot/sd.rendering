@@ -3,6 +3,7 @@
 import grokcore.component as grok
 from zope.component import getAdapters
 from zope.i18nmessageid import MessageFactory
+from zope.cachedescriptors.property import CachedProperty
 from zope.app.schema.vocabulary import IVocabularyFactory
 from zope.interface.declarations import directlyProvides, implements
 from zope.publisher.browser import TestRequest
@@ -35,6 +36,15 @@ class LayoutVocabulary(grok.GlobalUtility):
     grok.name(u"sd.rendering.layout")
     grok.implements(IVocabularyFactory)
 
+    @CachedProperty
+    def default_values(self):
+        default  = LayoutTerm(
+            u"default",
+            u"Renderer by default if any.",
+            )
+
+        return [default]
+
     def __call__(self, context):
 
         if IUndirectLayoutProvider.providedBy(context):
@@ -46,4 +56,4 @@ class LayoutVocabulary(grok.GlobalUtility):
         renderers = getAdapters((context, TestRequest()), IStructuredRenderer)
         terms = [LayoutTerm(name, renderer.__doc__)
                  for name, renderer in renderers]
-        return SimpleVocabulary(terms)
+        return SimpleVocabulary(self.default_values + terms)

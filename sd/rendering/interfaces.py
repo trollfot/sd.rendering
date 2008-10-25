@@ -20,6 +20,11 @@ class IStructuredRenderer(Interface):
         done by rendering a template.
         """
 
+class IRendererResolver(Interface):
+    """An adapter used to fetch the renderers.
+    """
+    renderer = Attribute("Renderer to use to render the given context.")
+
 class IStructuredDefaultRenderer(IStructuredRenderer):
     """A structured renderer used as default, when no layout is selected.
     """

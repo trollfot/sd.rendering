@@ -9,7 +9,7 @@ import zope.component
 
 from interfaces import IStructuredRenderer
 from zope.publisher.interfaces.browser import IDefaultBrowserLayer
-
+from grokcore.view.interfaces import ITemplateFileFactory
 
 
 class FolderishRendererGrokker(martian.ClassGrokker):
@@ -23,7 +23,6 @@ class FolderishRendererGrokker(martian.ClassGrokker):
         """
         renderer.__folder_limit__ = limit
         renderer.__folder_restrict__ = restrict
-        print "grokked folderish"
         return True
 
 
@@ -31,6 +30,8 @@ class BaseRendererGrokker(martian.ClassGrokker):
     martian.priority(450)
     martian.component(base.StructuredRenderer)
     martian.directive(grokcore.view.layer, default=IDefaultBrowserLayer)
+    martian.directive(grokcore.view.template, default=None)
+    martian.directive(grokcore.view.provides, default=IStructuredRenderer)
     martian.directive(grokcore.component.name, default=u"default")
     martian.directive(directives.macro, name="macro")
     martian.directive(directives.target, name="targets")
@@ -41,16 +42,18 @@ class BaseRendererGrokker(martian.ClassGrokker):
         return super(BaseRendererGrokker, self).grok(
             name, renderer, module_info, **kw)
 
-    def execute(self, renderer, config, layer, name, macro, targets, **kw):
+    def execute(self, renderer, config, layer, name, macro,
+                targets, template, provides, **kw):
         """Register a renderer.
-        """
-        print "grokked other"
+        """        
         renderer.__renderer_macro__ = macro
-        templates = renderer.module_info.getAnnotation('grok.templates', None)
+        templates = renderer.module_info.getAnnotation(
+            'grok.templates', None
+            )
         if templates is not None:
             config.action(
                 discriminator=None,
-                callable=self.checkTemplates,
+                callable=self.checkTemplates,               
                 args=(templates, renderer.module_info, renderer)
                 )
         
@@ -59,17 +62,20 @@ class BaseRendererGrokker(martian.ClassGrokker):
             config.action(
                 discriminator=('adapter', adapts, IStructuredRenderer, name),
                 callable=zope.component.provideAdapter,
-                args=(renderer, adapts, IStructuredRenderer, name),
+                args=(renderer, adapts, provides, name),
                 )
 
         return True
 
-    def checkTemplates(self, templates, module_info, renderer):
-        def has_render(provider):
-            return False
-        def has_no_render(provider):
-            # always has a render method
-            return False
-        templates.checkTemplates(module_info, renderer,
-                                 'structured document renderer',
+    def checkTemplates(self, templates, module_info, factory):
+
+        def has_render(factory):
+            return factory.render != base.GrokAwareRenderer.render
+
+        def has_no_render(factory):
+            return (factory.render == base.GrokAwareRenderer.render and
+                    getattr(factory, 'template', None) is None)
+
+        templates.checkTemplates(module_info, factory, 'sd.renderer',
                                  has_render, has_no_render)
+
