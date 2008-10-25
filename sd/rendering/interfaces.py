@@ -15,6 +15,8 @@ class IStructuredRenderer(Interface):
     handled by a content provider. It can be used simply as an adapter.
     Named, it can be used in order to provide a dynamic layout.
     """
+    label = Attribute("The name of the renderer")
+    
     def render(self):
         """This has to return a snippet of HTML. Usually, this is
         done by rendering a template.

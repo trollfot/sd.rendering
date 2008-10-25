@@ -7,9 +7,14 @@ import grokcore.view
 import grokcore.component
 import zope.component
 
-from interfaces import IStructuredRenderer
+from interfaces import IStructuredRenderer, IStructuredDefaultRenderer
+from zope.i18nmessageid import MessageFactory
 from zope.publisher.interfaces.browser import IDefaultBrowserLayer
 from grokcore.view.interfaces import ITemplateFileFactory
+
+
+DEFAULT = u"default"
+_ = MessageFactory("sd")
 
 
 class FolderishRendererGrokker(martian.ClassGrokker):
@@ -31,21 +36,27 @@ class BaseRendererGrokker(martian.ClassGrokker):
     martian.component(base.StructuredRenderer)
     martian.directive(grokcore.view.layer, default=IDefaultBrowserLayer)
     martian.directive(grokcore.view.template, default=None)
-    martian.directive(grokcore.view.provides, default=IStructuredRenderer)
-    martian.directive(grokcore.component.name, default=u"default")
-    martian.directive(directives.macro, name="macro")
-    martian.directive(directives.target, name="targets")
+    martian.directive(grokcore.component.name, default=DEFAULT)
+    martian.directive(directives.target)
+    martian.directive(directives.macro)
+
     
     def grok(self, name, renderer, module_info=None, **kw):
-        renderer.__view_name__ = name
         renderer.module_info = module_info
         return super(BaseRendererGrokker, self).grok(
             name, renderer, module_info, **kw)
 
-    def execute(self, renderer, config, layer, name, macro,
-                targets, template, provides, **kw):
+    def execute(self, renderer, config, layer, name,
+                macro, target, template, **kw):
         """Register a renderer.
-        """        
+        """
+        provides = (name == DEFAULT and IStructuredDefaultRenderer
+                    or IStructuredRenderer)
+
+        if renderer.label is None:
+            renderer.label = _(name, default=renderer.__doc__)
+
+        renderer.__view_name__ = name
         renderer.__renderer_macro__ = macro
         templates = renderer.module_info.getAnnotation(
             'grok.templates', None
@@ -57,10 +68,10 @@ class BaseRendererGrokker(martian.ClassGrokker):
                 args=(templates, renderer.module_info, renderer)
                 )
         
-        for context in targets:
+        for context in target:
             adapts = (context, layer)
             config.action(
-                discriminator=('adapter', adapts, IStructuredRenderer, name),
+                discriminator=('adapter', adapts, provides, name),
                 callable=zope.component.provideAdapter,
                 args=(renderer, adapts, provides, name),
                 )

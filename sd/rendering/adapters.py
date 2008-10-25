@@ -7,7 +7,6 @@ from zope.publisher.interfaces import browser
 from zope.cachedescriptors.property import CachedProperty
 from sd.contents.interfaces import IStructuredItem, IDynamicStructuredItem
 
-COMPONENT = 1
 
 class RendererResolver(grok.MultiAdapter):
     grok.adapts(IStructuredItem, browser.IBrowserRequest)
@@ -19,7 +18,8 @@ class RendererResolver(grok.MultiAdapter):
         self.adapted = IDynamicStructuredItem(context, None)
         
     @CachedProperty
-    def renderer(self):       
+    def renderer(self):
+
         name = self.adapted and self.adapted.sd_layout or None
         if name is None:
             return None
@@ -29,7 +29,6 @@ class RendererResolver(grok.MultiAdapter):
                                      rendering.IStructuredRenderer,
                                      name = name)
 
-        default = [renderer for renderer in
-                   getAdapters((self.context, self.request),
-                               rendering.IStructuredDefaultRenderer)]
-        return default and default[0][COMPONENT] or None
+        return queryMultiAdapter((self.context, self.request),
+                                 rendering.IStructuredDefaultRenderer,
+                                 name = name)

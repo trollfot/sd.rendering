@@ -24,7 +24,8 @@ class ViewPageTemplateAndMacroFile(ZopeTwoPageTemplate):
         context = view.default_namespace()
         context.update(kwargs)
 
-        engine = TALInterpreter(self._template._v_program, self._template._v_macros,
+        engine = TALInterpreter(self._template._v_program,
+                                self._template._v_macros,
                                 getEngine().getContext(context),
                                 output, strictinsert=0)
         engine.interpret(self._template._v_macros[name])

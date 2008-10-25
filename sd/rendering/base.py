@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import martian
-
-from zope.interface import Interface, implements
+import Acquisition
 from zope import component
+from zope.interface import Interface, implements
 from zope.cachedescriptors.property import CachedProperty
 from zope.publisher.browser import BrowserPage
 from plone.memoize.instance import memoize
@@ -12,7 +12,6 @@ from sd.common.adapters.interfaces import IContentQueryHandler
 from sd.contents.interfaces import IBatchProvider, IUndirectLayoutProvider
 from sd.contents.interfaces import IDynamicStructuredItem
 from interfaces import IStructuredRenderer, IBatchedContentProvider
-import Acquisition
 
 
 class GrokAwareRenderer(BrowserPage, Acquisition.Explicit):
@@ -91,6 +90,7 @@ class StructuredRenderer(GrokAwareRenderer):
     """The base implementation of the structured renderer
     """
     implements(IStructuredRenderer, IUndirectLayoutProvider)
+    label = None
 
     @memoize
     def getId(self):
