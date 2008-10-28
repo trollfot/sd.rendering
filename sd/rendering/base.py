@@ -56,20 +56,6 @@ class GrokAwareRenderer(BrowserPage, Acquisition.Explicit):
     def namespace(self):
         return {}
 
-    def __getitem__(self, key):
-        # This is BBB code for Zope page templates only:
-        if not isinstance(self.template, PageTemplate):
-            raise AttributeError("View has no item %s" % key)
-
-        value = self.template._template.macros[key]
-        # When this deprecation is done with, this whole __getitem__ can
-        # be removed.
-        warnings.warn("Calling macros directly on the view is deprecated. "
-                      "Please use context/@@viewname/macros/macroname\n"
-                      "View %r, macro %s" % (self, key),
-                      DeprecationWarning, 1)
-        return value
-
     def redirect(self, url):
         return self.request.response.redirect(url)
 
