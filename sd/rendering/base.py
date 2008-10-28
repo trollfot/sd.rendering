@@ -11,7 +11,7 @@ from sd.common.adapters.storage.interfaces import IStorage
 from sd.common.adapters.interfaces import IContentQueryHandler
 from sd.contents.interfaces import IBatchProvider, IUndirectLayoutProvider
 from sd.contents.interfaces import IDynamicStructuredItem
-from interfaces import IStructuredRenderer, IBatchedContentProvider
+from interfaces import IStructuredRenderer, IBatchedContentProvider, IStructuredView
 
 
 class GrokAwareRenderer(BrowserPage, Acquisition.Explicit):
@@ -90,7 +90,11 @@ class StructuredRenderer(GrokAwareRenderer):
     """The base implementation of the structured renderer
     """
     implements(IStructuredRenderer, IUndirectLayoutProvider)
-    label = None
+
+    @property
+    def label(self):
+        return NotImplementedError(u"You must have a label as a "
+                                   u"string or unicode string.")
 
     @memoize
     def getId(self):
@@ -141,7 +145,7 @@ class FolderishRenderer(StructuredRenderer):
     """Extends a StructuredRenderer in order to provide convenient methods
     for both content retrieving and batching.
     """
-    implements(IBatchedContentProvider)
+    implements(IBatchedContentProvider, IStructuredView)
 
     __folder_limit__ = None
     __folder_restrict__ = None

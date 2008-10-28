@@ -40,7 +40,7 @@ class BaseRendererGrokker(martian.ClassGrokker):
     martian.directive(directives.target)
     martian.directive(directives.macro)
 
-    
+
     def grok(self, name, renderer, module_info=None, **kw):
         renderer.module_info = module_info
         return super(BaseRendererGrokker, self).grok(
@@ -49,12 +49,9 @@ class BaseRendererGrokker(martian.ClassGrokker):
     def execute(self, renderer, config, layer, name,
                 macro, target, template, **kw):
         """Register a renderer.
-        """
+        """        
         provides = (name == DEFAULT and IStructuredDefaultRenderer
                     or IStructuredRenderer)
-
-        if renderer.label is None:
-            renderer.label = _(name, default=renderer.__doc__)
 
         renderer.__view_name__ = name
         renderer.__renderer_macro__ = macro
