@@ -2,8 +2,10 @@
 
 import martian
 import Acquisition
+from directives import traversable
 from zope import component
 from zope.interface import Interface, implements
+from zope.publisher.interfaces import NotFound
 from zope.cachedescriptors.property import CachedProperty
 from zope.publisher.browser import BrowserPage
 from plone.memoize.instance import memoize
@@ -34,16 +36,13 @@ class GrokAwareRenderer(BrowserPage, Acquisition.Explicit):
         return self.request.response
 
     def __call__(self):
-        mapply(self.update, (), self.request)
-        if self.request.response.getStatus() in (302, 303):
-            # A redirect was triggered somewhere in update().  Don't
-            # continue rendering the template or doing anything else.
-            return
+        return self.template.render(self)
 
-        template = getattr(self, 'template', None)
-        if template is not None:
-            return self.template.render(self)
-        return mapply(self.render, (), self.request)
+    def publishTraverse(self, request, name):
+        allowed = traversable.bind().get(self)
+        if allowed and name in allowed:
+            return getattr(self, name)
+        raise NotFound(self, name, request)
 
     def default_namespace(self):
         namespace = {}
@@ -76,6 +75,7 @@ class StructuredRenderer(GrokAwareRenderer):
     """The base implementation of the structured renderer
     """
     implements(IStructuredRenderer, IUndirectLayoutProvider)
+    traversable("configuration")
 
     @property
     def label(self):
@@ -116,7 +116,7 @@ class StructuredRenderer(GrokAwareRenderer):
 
     @CachedProperty
     def configuration(self):
-        return IStorage(self.context).retrieve(self.__name__)
+        return IStorage(self.context).retrieve(self.__view_name__)
 
     def javascript(self):
         return NotImplementedError(u"You must implement 'javascript' as a "

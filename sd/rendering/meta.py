@@ -11,7 +11,8 @@ from interfaces import IStructuredRenderer, IStructuredDefaultRenderer
 from zope.i18nmessageid import MessageFactory
 from zope.publisher.interfaces.browser import IDefaultBrowserLayer
 from grokcore.view.interfaces import ITemplateFileFactory
-
+from Products.Five.security import protectName, protectClass
+from zope.app.publisher.browser.viewmeta import _handle_allowed_attributes
 
 DEFAULT = u"default"
 _ = MessageFactory("sd")
@@ -64,7 +65,7 @@ class BaseRendererGrokker(martian.ClassGrokker):
                 callable=self.checkTemplates,               
                 args=(templates, renderer.module_info, renderer)
                 )
-        
+
         for context in target:
             adapts = (context, layer)
             config.action(
@@ -72,7 +73,6 @@ class BaseRendererGrokker(martian.ClassGrokker):
                 callable=zope.component.provideAdapter,
                 args=(renderer, adapts, provides, name),
                 )
-
         return True
 
     def checkTemplates(self, templates, module_info, factory):

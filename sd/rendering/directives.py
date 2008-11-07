@@ -34,3 +34,9 @@ class restrict(martian.Directive):
     store = martian.MULTIPLE
     default = None
     validate = martian.validateInterface
+
+class traversable(martian.Directive):
+    scope = martian.CLASS
+    store = martian.MULTIPLE
+    default = None
+    validate = martian.validateText
