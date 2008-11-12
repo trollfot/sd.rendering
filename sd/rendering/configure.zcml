@@ -1,16 +1,6 @@
-<configure
-    xmlns="http://namespaces.zope.org/zope"
-    xmlns:browser="http://namespaces.zope.org/browser"
-    xmlns:grok="http://namespaces.zope.org/grok">
+<configure xmlns="http://namespaces.zope.org/grok">
   
-  <adapter
-      factory="sd.common.adapters.query.FolderishContentQuery"
-      />
-
-  <adapter
-      factory="sd.common.adapters.query.TopicContentQuery"
-      />
-
-  <grok:grok package="." />
+  <grok package="." />
+  <grok package="sd.common.adapters.query" />
 
 </configure>

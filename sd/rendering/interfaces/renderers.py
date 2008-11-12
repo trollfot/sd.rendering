@@ -51,4 +51,10 @@ class IBatchedContentProvider(IStructuredRenderer, IStructuredView):
         the current batch position. If 'full_objects' is True, it returns
         a list of objects otherwise brains.
         """
-    
+
+
+__all__ = ("IStructuredView",
+           "IStructuredRenderer",
+           "IRendererResolver",
+           "IStructuredDefaultRenderer",
+           "IBatchedContentProvider")

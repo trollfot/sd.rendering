@@ -40,3 +40,12 @@ class traversable(martian.Directive):
     store = martian.MULTIPLE
     default = None
     validate = martian.validateText
+
+class configuration(martian.Directive):
+    scope = martian.CLASS_OR_MODULE
+    store = martian.ONCE
+    default = None
+
+    def factory(self, interface, klass):
+        return {'schema': interface,
+                'klass': klass}

@@ -3,16 +3,14 @@
 import base
 import martian
 import directives
+import interfaces
 import grokcore.view
 import grokcore.component
 import zope.component
 
-from interfaces import IStructuredRenderer, IStructuredDefaultRenderer
 from zope.i18nmessageid import MessageFactory
+from zope.interface import classImplements
 from zope.publisher.interfaces.browser import IDefaultBrowserLayer
-from grokcore.view.interfaces import ITemplateFileFactory
-from Products.Five.security import protectName, protectClass
-from zope.app.publisher.browser.viewmeta import _handle_allowed_attributes
 
 DEFAULT = u"default"
 _ = MessageFactory("sd")
@@ -40,6 +38,7 @@ class BaseRendererGrokker(martian.ClassGrokker):
     martian.directive(grokcore.component.name, default=DEFAULT)
     martian.directive(directives.target)
     martian.directive(directives.macro)
+    martian.directive(directives.configuration, default=None)
 
 
     def grok(self, name, renderer, module_info=None, **kw):
@@ -48,17 +47,21 @@ class BaseRendererGrokker(martian.ClassGrokker):
             name, renderer, module_info, **kw)
 
     def execute(self, renderer, config, layer, name,
-                macro, target, template, **kw):
+                macro, target, template, configuration, **kw):
         """Register a renderer.
         """        
-        provides = (name == DEFAULT and IStructuredDefaultRenderer
-                    or IStructuredRenderer)
+        provides = (name == DEFAULT and interfaces.IStructuredDefaultRenderer
+                    or interfaces.IStructuredRenderer)
 
         renderer.__view_name__ = name
         renderer.__renderer_macro__ = macro
         templates = renderer.module_info.getAnnotation(
             'grok.templates', None
             )
+
+        if configuration is not None:
+            classImplements(renderer, interfaces.IConfigurableRenderer)
+        
         if templates is not None:
             config.action(
                 discriminator=None,
@@ -78,10 +81,10 @@ class BaseRendererGrokker(martian.ClassGrokker):
     def checkTemplates(self, templates, module_info, factory):
 
         def has_render(factory):
-            return factory.render != base.GrokAwareRenderer.render
+            return factory.render != base.StructuredRenderer.render
 
         def has_no_render(factory):
-            return (factory.render == base.GrokAwareRenderer.render and
+            return (factory.render == base.StructuredRenderer.render and
                     getattr(factory, 'template', None) is None)
 
         templates.checkTemplates(module_info, factory, 'sd.renderer',
