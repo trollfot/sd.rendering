@@ -2,6 +2,7 @@
 
 import martian
 import Acquisition
+
 from directives import traversable
 from zope import component
 from zope.interface import Interface, implements
@@ -41,7 +42,7 @@ class GrokAwareRenderer(BrowserPage, Acquisition.Explicit):
     def publishTraverse(self, request, name):
         allowed = traversable.bind().get(self)
         if allowed and name in allowed:
-            return getattr(self, name)
+            return getattr(self, name)        
         raise NotFound(self, name, request)
 
     def default_namespace(self):
@@ -113,6 +114,10 @@ class StructuredRenderer(GrokAwareRenderer):
     @CachedProperty
     def show_description(self):
         return IDynamicStructuredItem(self.context).show_description
+
+    @CachedProperty
+    def configurable(self):
+        return sd.config.configuration.bind().get(self)
 
     @CachedProperty
     def configuration(self):
