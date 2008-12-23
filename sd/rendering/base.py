@@ -1,55 +1,70 @@
 # -*- coding: utf-8 -*-
 
-from Acquisition import Explicit
-from zope.interface import implements
-from zope.publisher.browser import BrowserPage
+import martian
+import Acquisition
+
+from OFS.SimpleItem import SimpleItem
+from zope import component
+from zope.interface import Interface, implements
+from zope.publisher.interfaces import NotFound
 from zope.cachedescriptors.property import CachedProperty
-
+from zope.publisher.browser import BrowserPage
 from plone.memoize.instance import memoize
-from Products.Five.browser import BrowserView
 
+from directives import traversable, configuration
 from sd.common.adapters.storage.interfaces import IStorage
 from sd.common.adapters.interfaces import IContentQueryHandler
-from sd.contents.interfaces import IBatchProvider
-from sd.contents.interfaces import IUndirectLayoutProvider
-from sd.contents.interfaces import IDynamicStructuredChapter
-from sd.contents.interfaces import IDynamicStructuredParagraph
-from interfaces import *
+import sd.contents.interfaces as contents 
+import interfaces.renderers as rendering
+import interfaces.configuration as config
 
 
-class BaseStructuredContentProvider(Explicit):
-    """The base implementation of the structured content provider.
-    """
-    implements(IStructuredContentProvider)
-    
-    def __init__(self, context, request, view):
-        self.context = context
-        self.request = request
-        self.view = self.__parent__ = view
-
-    def update(self):
-        pass
-
-    def render(self):
-        raise NotImplementedError(u"You must implement 'render' as a method "
-                                  u"or page template file attribute")
-
-
-class BaseStructuredRenderer(Explicit, BrowserPage):
+class StructuredRenderer(BrowserPage, SimpleItem):
     """The base implementation of the structured renderer
     """
-    implements(IBaseStructuredRenderer, IUndirectLayoutProvider)
+    traversable("configuration")
+    implements(rendering.IStructuredRenderer,
+               contents.IUndirectLayoutProvider)
+    
+    @property
+    def response(self):
+        return self.request.response
 
-    _filtering = None
-    _namespace = u""
-    _edit_url = u""
+    def __call__(self):
+        return self.template.render(self)
 
-    def __init__(self, context, request):
-        BrowserPage.__init__(self, context, request)
-        self.__parent__ = context
+    def publishTraverse(self, request, name):
+        allowed = traversable.bind().get(self)
+        if allowed and name in allowed:
+            return getattr(self, name)        
+        raise NotFound(self, name, request)
 
-    def __getitem__(self, name):
-        return self.index.macros[name]
+    def default_namespace(self):
+        namespace = {}
+        namespace['context'] = self.context
+        namespace['request'] = self.request
+        namespace['view'] = self
+        return namespace
+
+    def namespace(self):
+        return {}
+
+    def redirect(self, url):
+        return self.request.response.redirect(url)
+
+    def _render_template(self):
+        macro = getattr(self, "__renderer_macro__", None)
+        if macro is not None:
+            return self.template.renderMacro(self, macro)
+        return self.template.render(self)
+    
+    def render(self):
+        return self._render_template()
+
+    @property
+    def label(self):
+        return NotImplementedError(u"You must have a label as a "
+                                   u"string or unicode string.")
 
     @memoize
     def getId(self):
@@ -61,7 +76,7 @@ class BaseStructuredRenderer(Explicit, BrowserPage):
 
     @memoize
     def Title(self):
-        return self.context.Title()        
+        return self.context.Title()
 
     @memoize
     def Description(self):
@@ -72,8 +87,24 @@ class BaseStructuredRenderer(Explicit, BrowserPage):
         return self.context.absolute_url()
 
     @CachedProperty
+    def _edit_url(self):
+       return self.absolute_url() + "/@@sd.preferences"
+    
+    @CachedProperty
+    def show_title(self):
+        return contents.IDynamicStructuredItem(self.context).show_title
+
+    @CachedProperty
+    def show_description(self):
+        return contents.IDynamicStructuredItem(self.context).show_description
+
+    @CachedProperty
+    def configurable(self):
+        return configuration.bind().get(self)
+
+    @CachedProperty
     def configuration(self):
-        return IStorage(self.context).retrieve(self.__name__)
+        return IStorage(self.context).retrieve(self.__view_name__)
 
     def javascript(self):
         return NotImplementedError(u"You must implement 'javascript' as a "
@@ -83,64 +114,20 @@ class BaseStructuredRenderer(Explicit, BrowserPage):
     def widget(self, *args, **kw):
         return self.context.widget(*args, **kw)
 
-    def __call__(self, *args, **kw):
-        return self.index(*args, **kw)
-    
-    def render(self, *args, **kw):
-        if self.__renderer_macro__ is not None:
-            return self.index.renderMacro(self.__renderer_macro__, **kw)
-        return self.index(*args, **kw)
 
-
-class ChapterStructuredRenderer(BaseStructuredRenderer):
-    """Extends a BaseStructuredRenderer in order to render specifically a
-    chapter.
-    """
-    implements(IStructuredChapterView, IChapterRenderer)
-    _namespace = "sd.rendering.chapter_layout"
-
-    @CachedProperty
-    def _edit_url(self):
-       return self.absolute_url() + "/@@dynamic_chapter"
-
-    @CachedProperty
-    def show_title(self):
-        return IDynamicStructuredChapter(self.context).show_title
-
-    @CachedProperty
-    def show_description(self):
-        return IDynamicStructuredChapter(self.context).show_description
-
-
-class ParagraphStructuredRenderer(BaseStructuredRenderer):
-    """Extends a BaseStructuredRenderer in order to render specifically a
-    paragraph.
-    """
-    implements(IParagraphRenderer)
-    _namespace = "sd.rendering.paragraph_layout"
-    
-    @CachedProperty
-    def _edit_url(self):
-       return self.absolute_url() + "/@@dynamic_paragraph"
-    
-    @CachedProperty
-    def show_title(self):
-        return IDynamicStructuredParagraph(self.context).show_title
-
-    @CachedProperty
-    def show_description(self):
-        return IDynamicStructuredParagraph(self.context).show_description
-
-
-class FolderishRenderer(BaseStructuredRenderer):
-    """Extends a BaseStructuredRenderer in order to provide convenient methods
+class FolderishRenderer(StructuredRenderer):
+    """Extends a StructuredRenderer in order to provide convenient methods
     for both content retrieving and batching.
     """
-    implements(IBatchedContentProvider)
+    implements(rendering.IBatchedContentProvider,
+               rendering.IStructuredView)
+
+    __folder_limit__ = None
+    __folder_restrict__ = None
 
     @CachedProperty
     def batch_size(self):
-        provider = IBatchProvider(self.context, None)
+        provider = contents.IBatchProvider(self.context, None)
         if provider is None:
             return 15
         return provider.batch_size
@@ -169,11 +156,16 @@ class FolderishRenderer(BaseStructuredRenderer):
 
     @memoize
     def query_contents(self, **contentFilter):
-        iface = getattr(self, '_filtering', None)
-        if iface:
-            contentFilter['object_provides'] = iface
-        handler = IContentQueryHandler(self.context, None)
-        return handler and handler.query_contents(**contentFilter) or []
+        if self.__folder_restrict__:
+            contentFilter['object_provides'] = [
+                ".".join((iface.__module__, iface.__name__))
+                for iface in self.__folder_restrict__
+                ]
+
+        handler = IContentQueryHandler(self.context, None)      
+        return handler and handler.query_contents(
+            limit = self.__folder_limit__, **contentFilter
+            ) or []
 
     def get_page(self):
         return (getattr(self, '_page', None) or
@@ -183,3 +175,17 @@ class FolderishRenderer(BaseStructuredRenderer):
         self._page = value
             
     page = property(get_page, set_page)
+
+
+class BaseConfigSheet(SimpleItem):
+    implements(config.IConfigurationSheet)
+
+    def __init__(self, name):
+        self.name = name
+        self.__name__ = name
+
+    def __repr__(self):
+        return "<ConfigurationSheet %s>" % self.__name__
+
+    def __call__(self):
+        return repr(self)
