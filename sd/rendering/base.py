@@ -35,8 +35,6 @@ class StructuredRenderer(BrowserPage, SimpleItem):
         return self.template.render(self)
 
     def publishTraverse(self, request, name):
-        import pdb
-        pdb.set_trace()
         allowed = traversable.bind().get(self)
         if allowed and name in allowed:
             return getattr(self, name)
