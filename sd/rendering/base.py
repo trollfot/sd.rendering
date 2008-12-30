@@ -22,6 +22,7 @@ import interfaces.configuration as config
 class StructuredRenderer(BrowserPage, SimpleItem):
     """The base implementation of the structured renderer
     """
+    traversable("index_html")
     traversable("configuration")
     implements(rendering.IStructuredRenderer,
                contents.IUndirectLayoutProvider)
@@ -34,9 +35,11 @@ class StructuredRenderer(BrowserPage, SimpleItem):
         return self.template.render(self)
 
     def publishTraverse(self, request, name):
+        import pdb
+        pdb.set_trace()
         allowed = traversable.bind().get(self)
         if allowed and name in allowed:
-            return getattr(self, name)        
+            return getattr(self, name)
         raise NotFound(self, name, request)
 
     def default_namespace(self):
@@ -113,6 +116,8 @@ class StructuredRenderer(BrowserPage, SimpleItem):
 
     def widget(self, *args, **kw):
         return self.context.widget(*args, **kw)
+
+    index_html = render
 
 
 class FolderishRenderer(StructuredRenderer):
