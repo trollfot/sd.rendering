@@ -31,7 +31,11 @@ class StructuredRenderer(BrowserPage, SimpleItem):
     def response(self):
         return self.request.response
 
+    def update(self):
+        pass
+
     def __call__(self):
+        self.update()
         return self.template.render(self)
 
     def publishTraverse(self, request, name):
@@ -60,6 +64,7 @@ class StructuredRenderer(BrowserPage, SimpleItem):
         return self.template.render(self)
     
     def render(self):
+        self.update()
         return self._render_template()
 
     @property
