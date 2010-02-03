@@ -7,9 +7,7 @@ from zope.cachedescriptors.property import CachedProperty
 from plone.app.form.validators import null_validator
 
 from directives import configuration
-from sd.common.forms.base import base_template
 from sd.common.adapters.storage.interfaces import IStorage
-from sd.contents.interfaces import IStructuredItem
 from sd.rendering.interfaces import IStructuredRenderer, IConfigurationSheet
 
 from zope.i18nmessageid import MessageFactory

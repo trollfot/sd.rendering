@@ -2,7 +2,7 @@
 
 from five import grok
 import interfaces as rendering
-from zope.component import queryMultiAdapter, getAdapters
+from zope.component import queryMultiAdapter
 from zope.publisher.interfaces import browser
 from zope.cachedescriptors.property import CachedProperty
 from sd.common.adapters import storage
@@ -18,7 +18,7 @@ class RendererResolver(grok.MultiAdapter):
         self.context = context
         self.request = request
         self.adapted = IDynamicStructuredItem(context, None)
-        
+
     @CachedProperty
     def renderer(self):
 
@@ -41,7 +41,7 @@ class ConfigurationStorage(storage.GenericAnnotationStorage):
     """
     grok.context(IStructuredItem)
     grok.provides(storage.IStorage)
-    
+
     storage = AdapterAnnotationProperty(
         storage.IDictStorage['storage'],
         ns="sd.rendering.configuration"

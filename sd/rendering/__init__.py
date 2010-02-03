@@ -1,5 +1,5 @@
 # SD rendering module - an extension to browser views.
-# - Grokked !- 
+# - Grokked !-
 
 from grokcore.component import *
 from directives import *

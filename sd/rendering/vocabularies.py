@@ -1,21 +1,21 @@
 # -*- coding: utf-8 -*-
 
-import grokcore.component as grok
-from zope.component import getAdapters
-from zope.publisher.browser import TestRequest
-from zope.schema.vocabulary import SimpleVocabulary, SimpleTerm
-from zope.schema.interfaces import ITokenizedTerm, ITitledTokenizedTerm
+from five import grok
 from sd.contents.interfaces import IUndirectLayoutProvider
+from sd.rendering.interfaces import IStructuredRenderer
 from zope.app.schema.vocabulary import IVocabularyFactory
-from zope.interface.declarations import directlyProvides, implements
-from interfaces import IStructuredRenderer
+from zope.component import getAdapters
+from zope.interface.declarations import directlyProvides
+from zope.publisher.browser import TestRequest
+from zope.schema.interfaces import ITokenizedTerm, ITitledTokenizedTerm
+from zope.schema.vocabulary import SimpleVocabulary
 
 
 class LayoutTerm(object):
     """Simple tokenized keyword used by SimpleVocabulary.
     """
-    implements(ITokenizedTerm)
-    
+    grok.implements(ITokenizedTerm)
+
     def __init__(self, name, label):
         """Create a term from the single value. This class prevents
         the use of the silly bugged SimpleTerm.
@@ -39,7 +39,7 @@ class LayoutVocabulary(grok.GlobalUtility):
             if not context:
                 raise KeyError ("This adapter doesn't provide a suffisant"
                                 "context")
-        
+
         renderers = getAdapters((context, TestRequest()), IStructuredRenderer)
         terms = [LayoutTerm(name, renderer.label) for
                  name, renderer in renderers]

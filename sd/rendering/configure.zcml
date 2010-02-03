@@ -1,5 +1,7 @@
 <configure xmlns="http://namespaces.zope.org/grok">
-  
+
+  <include package="five.grok" />
+  <include package="sd.common" />
   <grok package="." />
   <grok package="sd.common.adapters.query" />
 

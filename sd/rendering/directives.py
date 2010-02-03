@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import martian
-from zope.interface.interfaces import IInterface
-from martian.error import GrokError, GrokImportError
+from martian.error import GrokImportError
 from Products.ATContentTypes.interface import IATContentType
 
 def validateInteger(directive, value):

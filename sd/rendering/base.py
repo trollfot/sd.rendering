@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import martian
-import Acquisition
-
 from OFS.SimpleItem import SimpleItem
-from zope import component
-from zope.interface import Interface, implements
+from zope.interface import implements
 from zope.publisher.interfaces import NotFound
 from zope.cachedescriptors.property import CachedProperty
 from zope.publisher.browser import BrowserPage
@@ -14,7 +10,7 @@ from plone.memoize.instance import memoize
 from directives import traversable, configuration
 from sd.common.adapters.storage.interfaces import IStorage
 from sd.common.adapters.interfaces import IContentQueryHandler
-import sd.contents.interfaces as contents 
+import sd.contents.interfaces as contents
 import interfaces.renderers as rendering
 import interfaces.configuration as config
 
@@ -26,7 +22,7 @@ class StructuredRenderer(BrowserPage, SimpleItem):
     traversable("configuration")
     implements(rendering.IStructuredRenderer,
                contents.IUndirectLayoutProvider)
-    
+
     @property
     def response(self):
         return self.request.response
@@ -62,7 +58,7 @@ class StructuredRenderer(BrowserPage, SimpleItem):
         if macro is not None:
             return self.template.renderMacro(self, macro)
         return self.template.render(self)
-    
+
     def render(self):
         self.update()
         return self._render_template()
@@ -95,7 +91,7 @@ class StructuredRenderer(BrowserPage, SimpleItem):
     @CachedProperty
     def _edit_url(self):
        return self.absolute_url() + "/@@sd.preferences"
-    
+
     @CachedProperty
     def show_title(self):
         return contents.IDynamicStructuredItem(self.context).show_title
@@ -170,7 +166,7 @@ class FolderishRenderer(StructuredRenderer):
                 for iface in self.__folder_restrict__
                 ]
 
-        handler = IContentQueryHandler(self.context, None)      
+        handler = IContentQueryHandler(self.context, None)
         return handler and handler.query_contents(
             limit = self.__folder_limit__, **contentFilter
             ) or []
@@ -181,7 +177,7 @@ class FolderishRenderer(StructuredRenderer):
 
     def set_page(self, value):
         self._page = value
-            
+
     page = property(get_page, set_page)
 
 
