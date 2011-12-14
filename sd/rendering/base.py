@@ -188,6 +188,12 @@ class BaseConfigSheet(SimpleItem):
         self.name = name
         self.__name__ = name
 
+    def getId(self):
+        return self.name
+
+    def Title(self):
+        return u"Configuration"
+
     def __repr__(self):
         return "<ConfigurationSheet %s>" % self.__name__
 
